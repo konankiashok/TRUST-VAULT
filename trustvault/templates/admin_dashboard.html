@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block title %}Admin - TrustVault{% endblock %}
+{% block body %}
+<h1>Admin</h1>
+<div class="card"><h2>Audit chain</h2>
+{% if chain.ok %}<span class="tag allowed">intact</span> {{ chain.count }} entries verified.
+<p class="mut">Head hash (record it somewhere outside this system to detect tail truncation):<br><code>{{ chain.head }}</code></p>
+{% else %}<span class="tag denied">BROKEN</span> {{ chain.reason }} at entry #{{ chain.bad_id }}.{% endif %}</div>
+<div class="card"><h2>Worth noticing</h2>
+{% if alerts %}<ul>{% for a in alerts %}<li>{{ a }}</li>{% endfor %}</ul>{% else %}<p class="mut">No alerts.</p>{% endif %}</div>
+<div class="card"><h2>Totals</h2><p>{{ stats.users }} users &middot; {{ stats.documents }} documents &middot; {{ stats.denied_24h }} refused attempts in the last 24 h</p></div>
+{% endblock %}

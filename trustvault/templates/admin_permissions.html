@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Permission changes{% endblock %}
+{% block body %}<h1>Permission history</h1>
+<div class="card wrap"><table><tr><th>Document</th><th>User</th><th>Level</th><th>Granted by</th><th>Granted</th><th>Expires</th><th>Revoked</th></tr>
+{% for r in rows %}<tr><td>{{ r['doc_name'] }}</td><td>{{ r['grantee'] }}</td><td>{{ r['level'] }}</td><td>{{ r['grantor'] }}</td>
+<td class="mut">{{ r['granted_at'][:16] }}</td><td class="mut">{{ (r['expires_at'] or '')[:16] }}</td>
+<td>{% if r['revoked_at'] %}<span class="tag denied">{{ r['revoked_at'][:16] }}</span>{% else %}<span class="tag allowed">active</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="mut">None.</td></tr>{% endfor %}</table></div>{% endblock %}

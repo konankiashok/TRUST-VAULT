@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: trustvault
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --workers 2 --threads 4 --timeout 60
+    envVars:
+      - key: TV_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SEED_ON_START
+        value: "1"
+      - key: DATA_DIR
+        value: /tmp/trustvault-data
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FILE_ENC_KEY
+        generateValue: true

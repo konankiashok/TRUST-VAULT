@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block title %}Documents - TrustVault{% endblock %}
+{% block body %}
+<div class="card"><h2>Search</h2>
+<form method="get" class="row">
+<label>Name<input name="q" value="{{ args.get('q','') }}" maxlength="100"></label>
+<label>Owner<input name="owner" value="{{ args.get('owner','') }}" maxlength="64"></label>
+<label>Category<select name="category"><option value="">Any</option>{% for c in categories %}<option {{ 'selected' if args.get('category')==c }}>{{ c }}</option>{% endfor %}</select></label>
+<label>From<input type="date" name="date_from" value="{{ args.get('date_from','') }}"></label>
+<label>To<input type="date" name="date_to" value="{{ args.get('date_to','') }}"></label>
+<button>Search</button></form></div>
+{% if g.user['role'] == 'owner' %}
+<div class="card"><h2>Upload</h2>
+<form method="post" action="{{ url_for('main.upload') }}" enctype="multipart/form-data" class="row">
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}">
+<label>File (pdf, docx, xlsx, png, jpg, txt, csv; max 5 MB)<input type="file" name="file" required></label>
+<label>Category<select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select></label>
+<button>Upload</button></form></div>
+{% endif %}
+<div class="card wrap"><h2>{{ 'All documents (metadata)' if g.user['role']=='admin' else 'Your documents' }}</h2>
+<table><tr><th>Name</th><th>Category</th><th>Owner</th><th>Your access</th><th>Created</th></tr>
+{% for d in docs %}<tr><td><a href="{{ url_for('main.document', doc_id=d['id']) }}">{{ d['name'] }}</a></td>
+<td>{{ d['category'] }}</td><td>{{ d['owner_name'] }}</td><td><span class="tag">{{ d['my_level'] }}</span></td><td class="mut">{{ d['created_at'][:10] }}</td></tr>
+{% else %}<tr><td colspan="5" class="mut">Nothing here.</td></tr>{% endfor %}</table></div>
+{% endblock %}

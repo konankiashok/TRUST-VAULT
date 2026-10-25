@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% block title %}{{ doc['name'] }} - TrustVault{% endblock %}
+{% block body %}
+<div class="card"><h1>{{ doc['name'] }}</h1>
+<p class="mut">{{ doc['category'] }} &middot; owner {{ owner }} &middot; v{{ doc['version'] }} &middot; {{ doc['size'] }} bytes &middot; updated {{ doc['updated_at'][:16] }}</p>
+<p>SHA-256 <code>{{ doc['sha256'] }}</code></p>
+{% if 'download' in acts %}<a href="{{ url_for('main.download', doc_id=doc['id']) }}"><button type="button">Download</button></a>
+{% else %}<span class="tag">metadata only</span> <span class="mut">You cannot read this file's contents.</span>{% endif %}
+{% if 'audit' in acts %} <a href="{{ url_for('main.doc_audit', doc_id=doc['id']) }}"><button type="button" class="sec">Activity</button></a>{% endif %}
+</div>
+{% if 'edit' in acts %}
+<div class="card"><h2>Edit</h2>
+<form method="post" action="{{ url_for('main.edit', doc_id=doc['id']) }}" enctype="multipart/form-data" class="row">
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}">
+<label>Name<input name="name" value="{{ doc['name'] }}" maxlength="100" required></label>
+<label>Category<select name="category">{% for c in categories %}<option {{ 'selected' if c==doc['category'] }}>{{ c }}</option>{% endfor %}</select></label>
+<label>Replace content (same type)<input type="file" name="file"></label><button>Save</button></form></div>
+{% endif %}
+{% if 'share' in acts %}
+<div class="card wrap"><h2>Who has access</h2>
+<form method="post" action="{{ url_for('main.grant', doc_id=doc['id']) }}" class="row">
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}">
+<label>Username<input name="username" required maxlength="64"></label>
+<label>Level<select name="level"><option>read</option><option>edit</option></select></label>
+<label>Expires in days (optional)<input name="expires_days" inputmode="numeric" maxlength="3" size="4"></label><button>Grant</button></form>
+<table><tr><th>User</th><th>Level</th><th>Granted</th><th>Status</th><th></th></tr>
+{% for gr in grants %}<tr><td>{{ gr['username'] }}</td><td>{{ gr['level'] }}</td><td class="mut">{{ gr['granted_at'][:16] }}</td>
+<td>{% if gr['revoked_at'] %}<span class="tag denied">revoked {{ gr['revoked_at'][:16] }}</span>
+{% elif gr['expires_at'] and gr['expires_at'] <= now %}<span class="tag denied">expired</span>
+{% else %}<span class="tag allowed">active</span>{% endif %}</td>
+<td>{% if not gr['revoked_at'] %}<form method="post" action="{{ url_for('main.revoke', doc_id=doc['id'], grant_id=gr['id']) }}">
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}"><button class="sec">Revoke</button></form>{% endif %}</td></tr>
+{% else %}<tr><td colspan="5" class="mut">Only you.</td></tr>{% endfor %}</table></div>
+{% endif %}
+{% if 'delete' in acts %}
+<div class="card"><h2>Delete</h2><form method="post" action="{{ url_for('main.delete', doc_id=doc['id']) }}">
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}"><button class="danger">Delete document</button></form></div>
+{% endif %}
+{% endblock %}

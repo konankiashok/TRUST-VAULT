@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}
+{% block body %}
+<h1>{{ title }}</h1>
+{% if filters %}
+<div class="card"><form method="get" class="row">
+<label>User<input name="user" value="{{ args.get('user','') }}"></label>
+<label>Document id<input name="doc" value="{{ args.get('doc','') }}" size="36"></label>
+<label>Action<input name="action" value="{{ args.get('action','') }}" placeholder="download"></label>
+<label>Result<select name="result"><option value="">Any</option><option {{ 'selected' if args.get('result')=='allowed' }}>allowed</option><option {{ 'selected' if args.get('result')=='denied' }}>denied</option></select></label>
+<label>From<input type="date" name="date_from" value="{{ args.get('date_from','') }}"></label>
+<label>To<input type="date" name="date_to" value="{{ args.get('date_to','') }}"></label><button>Filter</button></form></div>
+{% endif %}
+<div class="card wrap"><table><tr><th>#</th><th>Time (UTC)</th><th>Who</th><th>Action</th><th>Result</th><th>Document</th><th>Target</th><th>IP</th><th>Detail</th></tr>
+{% for r in rows %}<tr><td>{{ r['id'] }}</td><td class="mut">{{ r['ts'].replace('T',' ')[:19] }}</td><td>{{ r['actor_name'] }}{% if r['role'] %} <span class="mut">({{ r['role'] }})</span>{% endif %}</td>
+<td>{{ r['action'] }}</td><td><span class="tag {{ r['result'] }}">{{ r['result'] }}</span></td>
+<td><code>{{ (r['doc_id'] or '')[:36] }}</code></td><td>{{ r['target_user'] or '' }}</td><td>{{ r['ip'] }}</td><td>{{ r['detail'] or '' }}</td></tr>
+{% else %}<tr><td colspan="9" class="mut">No entries.</td></tr>{% endfor %}</table></div>
+{% endblock %}

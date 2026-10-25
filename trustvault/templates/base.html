@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ g.csrf or '' }}">
+<title>{% block title %}TrustVault{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body>
+<header><span class="brand">TrustVault</span>
+{% if g.user %}
+<a href="{{ url_for('main.documents') }}">Documents</a>
+{% if g.user['role'] == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">Admin</a>
+<a href="{{ url_for('admin.activity') }}">Activity</a>
+<a href="{{ url_for('admin.permissions') }}">Permissions</a>
+<a href="{{ url_for('admin.users') }}">Users</a>{% endif %}
+<form method="post" action="{{ url_for('main.logout') }}"><span class="mut">{{ g.user['username'] }} ({{ g.user['role'] }})</span>
+<input type="hidden" name="csrf_token" value="{{ g.csrf }}"><button class="sec">Log out</button></form>
+{% endif %}</header>
+<main>
+{% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}{% endwith %}
+{% block body %}{% endblock %}
+</main></body></html>
