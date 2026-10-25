@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustVault: Documents</title>
+<style>
+:root{--ink:#12263A;--paper:#EEF2F5;--card:#fff;--line:#CBD5DE;--muted:#51657A;--brand:#0F6B5C;--err:#B3261E;
+--owner:#8A5A00;--admin:#1D4E89;--viewer:#47606F}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--paper);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header a{color:#BFE3DA;text-decoration:none;font-weight:600}
+main{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.78rem;font-weight:600;color:#fff;background:var(--viewer)}
+.badge.owner{background:var(--owner)}.badge.admin{background:var(--admin)}.badge.light{background:#E1E8EE;color:var(--ink)}
+input,select,button,textarea{font:inherit}
+input,select{padding:8px 10px;border:1px solid #8FA1B2;border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+button{padding:7px 12px;border-radius:8px;border:1px solid var(--brand);background:#fff;color:var(--brand);font-weight:600;cursor:pointer}
+button.primary{background:var(--brand);color:#fff}
+button.danger{border-color:var(--err);color:var(--err)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #7FC4B7;outline-offset:1px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:140px}
+.doc{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.doc:first-of-type{border-top:0}
+.meta{color:var(--muted);font-size:.85rem}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{border-color:var(--line);color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+#msg{min-height:1.3em;font-size:.92rem;margin:0 0 10px}
+#msg.err{color:var(--err)}#msg.ok{color:var(--brand)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+td,th{text-align:left;padding:6px;border-top:1px solid var(--line);vertical-align:top}
+.chain{padding:10px 12px;border-radius:8px;font-size:.9rem;margin-bottom:12px}
+.chain.ok{background:#E3F4EE;border:1px solid #9DD3C4}.chain.bad{background:#FDE7E5;border:1px solid #E7A09B}
+.alert{background:#FFF6DD;border:1px solid #E9D28A;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:.88rem}
+dialog{border:1px solid var(--line);border-radius:12px;max-width:640px;width:calc(100% - 24px);padding:20px;color:var(--ink)}
+dialog::backdrop{background:rgba(18,38,58,.5)}
+label{display:grid;gap:4px;font-size:.88rem;font-weight:500;margin-bottom:10px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <strong>TrustVault &middot; Documents</strong>
+  <span class="row"><span id="who"></span><a href="/dashboard">Dashboard</a></span>
+</header>
+<main>
+  <p id="msg" role="status"></p>
+  <div class="tabs" id="tabs" hidden role="tablist">
+    <button data-tab="docs" aria-selected="true">Documents</button>
+    <button data-tab="activity" aria-selected="false">Activity</button>
+    <button data-tab="perms" aria-selected="false">Permissions</button>
+  </div>
+
+  <section id="tab-docs">
+    <div class="card" id="uploadCard" hidden>
+      <strong>Upload a document</strong>
+      <p class="meta">pdf, txt, csv, png, jpg, docx, xlsx &middot; max 5 MB &middot; stored encrypted</p>
+      <div class="row">
+        <input id="up-title" class="grow" placeholder="Title" maxlength="150">
+        <input id="up-cat" placeholder="Category" maxlength="60">
+        <input id="up-file" type="file">
+        <button class="primary" id="up-btn">Upload</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <input id="f-q" class="grow" placeholder="Search title or filename">
+        <input id="f-owner" placeholder="Owner">
+        <input id="f-cat" placeholder="Category">
+        <label style="margin:0">From <input id="f-from" type="date"></label>
+        <label style="margin:0">To <input id="f-to" type="date"></label>
+        <button id="f-go">Search</button>
+      </div>
+      <div id="list" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="tab-activity" hidden>
+    <div id="chain" class="chain"></div>
+    <div id="alerts"></div>
+    <div class="card">
+      <div class="row">
+        <input id="a-user" placeholder="User email">
+        <input id="a-doc" placeholder="Document id">
+        <select id="a-action"><option value="">Any action</option><option>login</option><option>upload</option><option>view</option><option>download</option><option>edit</option><option>delete</option><option>grant</option><option>revoke</option><option>role_change</option></select>
+        <select id="a-result"><option value="">Any result</option><option value="ok">ok</option><option value="denied">denied</option><option value="failed">failed</option></select>
+        <input id="a-from" type="date"><input id="a-to" type="date">
+        <button id="a-go">Filter</button>
+      </div>
+      <div class="scroll"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Result</th><th>Detail</th></tr></thead><tbody id="a-body"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tab-perms" hidden>
+    <div class="card"><div class="scroll"><table><thead><tr><th>Document</th><th>Person</th><th>Level</th><th>Status</th><th>Given by</th><th>Given</th><th>Ends</th></tr></thead><tbody id="p-body"></tbody></table></div></div>
+  </section>
+</main>
+
+<dialog id="dlg"><div id="dlg-body"></div><div class="row" style="margin-top:12px;justify-content:flex-end"><button id="dlg-close">Close</button></div></dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+const H = {"X-Requested-With": "TrustVault"};
+let me = null;
+
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  Object.assign(n, props || {});
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+}
+const when = ts => ts ? new Date(ts * 1000).toLocaleString() : "";
+const size = n => n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+function say(t, kind) { const m = $("msg"); m.textContent = t || ""; m.className = kind || ""; }
+
+async function call(url, opts = {}) {
+  opts.headers = Object.assign({}, H, opts.headers);
+  const r = await fetch(url, opts);
+  if (r.status === 401) { location.href = "/"; throw new Error("signed out"); }
+  let data = {};
+  if ((r.headers.get("content-type") || "").includes("json")) data = await r.json();
+  return {ok: r.ok, status: r.status, data, res: r};
+}
+const jsonOpts = (method, body) => ({method, headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+
+// ---------- documents ----------
+function query(map) {
+  const p = new URLSearchParams();
+  for (const [k, id] of Object.entries(map)) if ($(id).value.trim()) p.set(k, $(id).value.trim());
+  return p.toString();
+}
+async function loadDocs() {
+  const r = await call("/api/documents?" + query({q: "f-q", owner: "f-owner", category: "f-cat", date_from: "f-from", date_to: "f-to"}));
+  const list = $("list"); list.textContent = "";
+  $("uploadCard").hidden = !r.data.can_upload;
+  const docs = r.data.documents || [];
+  if (!docs.length) {
+    list.append(el("p", {className: "meta", textContent: me.role === "viewer"
+      ? "Nothing has been shared with you yet." : "No documents yet."}));
+    return;
+  }
+  for (const d of docs) {
+    const left = el("div", null,
+      el("strong", {textContent: d.title}), " ",
+      el("span", {className: "badge light", textContent: d.access === "admin" ? "metadata only" : d.access}),
+      el("div", {className: "meta", textContent: `${d.filename} · ${size(d.size)} · v${d.version} · ${d.category || "no category"} · owner: ${d.owner} · ${when(d.created_at)}`}));
+    const btns = el("div", {className: "row"});
+    const add = (label, cls, fn) => btns.append(el("button", {textContent: label, className: cls || "", onclick: fn}));
+    if (d.can.includes("download")) add("Download", "", () => download(d));
+    if (d.can.includes("edit")) add("Edit", "", () => editDlg(d));
+    if (d.can.includes("share")) add("Access", "", () => accessDlg(d));
+    if (d.can.includes("audit")) add("Activity", "", () => activityDlg(d));
+    if (d.can.includes("delete")) add("Delete", "danger", () => remove(d));
+    list.append(el("div", {className: "doc"}, left, btns));
+  }
+}
+async function download(d) {
+  const r = await call(`/api/documents/${d.id}/download`);
+  if (!r.ok) { say(r.data.error || "Download failed.", "err"); return loadDocs(); }
+  const url = URL.createObjectURL(await r.res.blob());
+  const a = el("a", {href: url, download: d.filename}); document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+async function remove(d) {
+  if (!confirm(`Delete "${d.title}"? Everyone loses access.`)) return;
+  const r = await call(`/api/documents/${d.id}`, {method: "DELETE"});
+  say(r.ok ? "Deleted." : r.data.error, r.ok ? "ok" : "err"); loadDocs();
+}
+$("up-btn").onclick = async () => {
+  const f = $("up-file").files[0];
+  if (!f) return say("Choose a file first.", "err");
+  const fd = new FormData();
+  fd.append("file", f); fd.append("title", $("up-title").value); fd.append("category", $("up-cat").value);
+  const r = await call("/api/documents", {method: "POST", body: fd});
+  if (!r.ok) return say(r.data.error, "err");
+  say("Uploaded.", "ok"); $("up-title").value = $("up-cat").value = $("up-file").value = ""; loadDocs();
+};
+$("f-go").onclick = loadDocs;
+
+// ---------- dialogs ----------
+function openDlg(...nodes) { const b = $("dlg-body"); b.textContent = ""; b.append(...nodes); if (!$("dlg").open) $("dlg").showModal(); }
+$("dlg-close").onclick = () => $("dlg").close();
+
+function editDlg(d) {
+  const t = el("input", {value: d.title, maxLength: 150}), c = el("input", {value: d.category, maxLength: 60}), f = el("input", {type: "file"});
+  const msg = el("p", {className: "meta"});
+  const save = el("button", {className: "primary", textContent: "Save", onclick: async () => {
+    const fd = new FormData(); fd.append("title", t.value); fd.append("category", c.value);
+    if (f.files[0]) fd.append("file", f.files[0]);
+    const r = await call(`/api/documents/${d.id}`, {method: "PUT", body: fd});
+    if (!r.ok) { msg.textContent = r.data.error; return; }
+    $("dlg").close(); say("Saved.", "ok"); loadDocs();
+  }});
+  openDlg(el("h3", {textContent: "Edit document"}),
+    el("label", null, "Title", t), el("label", null, "Category", c),
+    el("label", null, "Replace file (optional, same type, saved as a new version)", f), msg, save);
+}
+
+async function accessDlg(d) {
+  const body = el("div");
+  async function draw() {
+    const r = await call(`/api/documents/${d.id}/grants`);
+    body.textContent = "";
+    const rows = r.data.grants || [];
+    const tb = el("tbody");
+    for (const g of rows) {
+      const act = el("td");
+      if (g.status === "active") act.append(el("button", {className: "danger", textContent: "Revoke", onclick: async () => {
+        const x = await call(`/api/documents/${d.id}/grants/${g.id}/revoke`, {method: "POST"});
+        say(x.ok ? "Access revoked." : x.data.error, x.ok ? "ok" : "err"); draw();
+      }}));
+      tb.append(el("tr", null, el("td", {textContent: g.user_email}), el("td", {textContent: g.level}),
+        el("td", {textContent: g.status + (g.expires_at && g.status === "active" ? " · ends " + when(g.expires_at) : "")}), act));
+    }
+    body.append(rows.length ? el("div", {className: "scroll"}, el("table", null,
+      el("thead", null, el("tr", null, el("th", {textContent: "Person"}), el("th", {textContent: "Level"}), el("th", {textContent: "Status"}), el("th"))), tb))
+      : el("p", {className: "meta", textContent: "Not shared with anyone."}));
+    const who = el("input", {placeholder: "Username or email", className: "grow"});
+    const lvl = el("select"); lvl.append(new Option("Can read", "read"), new Option("Can edit", "edit"));
+    const days = el("input", {type: "number", min: 1, max: 365, placeholder: "Days (optional)", style: "width:130px"});
+    const msg = el("p", {className: "meta"});
+    const go = el("button", {className: "primary", textContent: "Share", onclick: async () => {
+      const x = await call(`/api/documents/${d.id}/grants`, jsonOpts("POST", {username: who.value, level: lvl.value, expires_days: days.value}));
+      if (!x.ok) { msg.textContent = x.data.error; return; }
+      say("Shared.", "ok"); draw();
+    }});
+    body.append(el("h4", {textContent: "Share with someone"}), el("div", {className: "row"}, who, lvl, days, go), msg);
+  }
+  openDlg(el("h3", {textContent: `Access to "${d.title}"`}), body);
+  draw();
+}
+
+async function activityDlg(d) {
+  const r = await call(`/api/documents/${d.id}/audit`);
+  openDlg(el("h3", {textContent: `Activity on "${d.title}"`}), auditTable(r.data.audit || []));
+}
+
+function auditTable(rows) {
+  const tb = el("tbody");
+  for (const a of rows) tb.append(el("tr", null, el("td", {textContent: when(a.ts)}), el("td", {textContent: a.user || "(anonymous)"}),
+    el("td", {textContent: a.action}), el("td", {textContent: a.result}), el("td", {textContent: a.detail})));
+  return el("div", {className: "scroll"}, el("table", null,
+    el("thead", null, el("tr", null, ...["When", "Who", "Action", "Result", "Detail"].map(h => el("th", {textContent: h})))), tb));
+}
+
+// ---------- admin ----------
+async function loadActivity() {
+  const r = await call("/api/admin/activity?" + query({user: "a-user", doc: "a-doc", action: "a-action", result: "a-result", date_from: "a-from", date_to: "a-to"}));
+  if (!r.ok) return say(r.data.error, "err");
+  const c = r.data.chain;
+  $("chain").className = "chain " + (c.ok ? "ok" : "bad");
+  $("chain").textContent = `${c.ok ? "✓" : "✗"} ${c.message} ${c.count} entries checked. Head: ${c.head.slice(0, 16)}…`;
+  const al = $("alerts"); al.textContent = "";
+  if (r.data.alerts.length) al.append(el("div", {className: "alert"},
+    el("strong", {textContent: "Access attempted after revocation"}), auditTable(r.data.alerts)));
+  const tb = $("a-body"); tb.textContent = "";
+  for (const a of r.data.audit) tb.append(el("tr", null, el("td", {textContent: when(a.ts)}), el("td", {textContent: a.user || "(anonymous)"}),
+    el("td", {textContent: a.action}), el("td", {textContent: a.result}), el("td", {textContent: a.detail})));
+}
+$("a-go").onclick = loadActivity;
+async function loadPerms() {
+  const r = await call("/api/admin/permissions");
+  const tb = $("p-body"); tb.textContent = "";
+  for (const g of r.data.grants || []) tb.append(el("tr", null, el("td", {textContent: g.doc_title}), el("td", {textContent: g.user_email}),
+    el("td", {textContent: g.level}), el("td", {textContent: g.status}), el("td", {textContent: g.granted_by}),
+    el("td", {textContent: when(g.created_at)}), el("td", {textContent: when(g.revoked_at || g.expires_at)})));
+}
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  for (const t of ["docs", "activity", "perms"]) $("tab-" + t).hidden = t !== b.dataset.tab;
+  ({docs: loadDocs, activity: loadActivity, perms: loadPerms})[b.dataset.tab]();
+});
+
+// ---------- start ----------
+(async () => {
+  const r = await call("/api/me");
+  me = r.data.user;
+  $("who").append(me.email + " ", el("span", {className: "badge " + me.role, textContent: me.role}));
+  $("tabs").hidden = me.role !== "admin";
+  loadDocs();
+})();
+</script>
+</body>
+</html>

@@ -19,6 +19,9 @@ MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "TrustVault")
 LOG_CODES = os.environ.get("LOG_CODES") == "1"  # testing only: prints codes in the server log
 
 app = Flask(__name__)
+if os.environ.get("TRUST_PROXY") == "1":   # Render sits behind one proxy: keep real client IPs for the audit log
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -67,6 +70,21 @@ def init_db():
     conn.close()
 
 init_db()
+
+# ---------- documents (sharing, encryption, audit) ----------
+from documents import init_documents, log_event
+
+def user_for_docs(req):
+    uid = session.get("uid")
+    if not uid:
+        return None
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute("SELECT id, email, name, role FROM users WHERE id=?", (uid,)).fetchone()
+    conn.close()
+    return dict(row) if row else None   # role is re-read from the database on every request
+
+init_documents(app, DB_PATH, user_for_docs)
 
 # ---------- helpers ----------
 def err(message, code=400):
@@ -149,8 +167,10 @@ def login():
     user = db().execute(
         "SELECT * FROM users WHERE (email=? OR username=?) AND is_demo=0", (ident, ident)).fetchone()
     if not user or not check_password_hash(user["password_hash"], password):
+        log_event(None, "login", "failed", f"identifier: {ident[:80]}")
         return err("Email, username or password is incorrect.", 401)
     start_session(user)
+    log_event(dict(user), "login", "ok")
     return jsonify(user=public(user))
 
 @app.post("/api/auth/demo")
@@ -261,6 +281,7 @@ def set_role(u, uid):
         return err("User not found.", 404)
     db().execute("UPDATE users SET role=? WHERE id=?", (role, uid))
     db().commit()
+    log_event(dict(u), "role_change", "ok", f"{target['email']}: {target['role']} -> {role}")
     return jsonify(ok=True)
 
 # ---------- pages ----------
@@ -290,12 +311,12 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 6px;
 <header><strong>TrustVault</strong><span><span id="who"></span> <button id="out">Sign out</button></span></header>
 <main>
 <div id="demo" class="note" hidden>You're in a demo account. Changes here aren't saved to a real account.</div>
-<div class="card"><h2 id="hello"></h2><p id="perm"></p></div>
+<div class="card"><h2 id="hello"></h2><p id="perm"></p><p><a href="/documents"><b>Open documents &rarr;</b></a></p></div>
 <div class="card" id="usersCard" hidden><h3>Members</h3><table id="tbl"></table></div>
 </main>
 <script>
-const PERMS={owner:"You have full control: manage members, change roles, and edit all records.",
-admin:"You can manage members and edit all records.",viewer:"You have read-only access to shared records."};
+const PERMS={owner:"You can upload documents, share them with named people, and revoke access at any time.",
+admin:"You manage members and can see all activity and permissions. You can't open file contents unless an owner shares them with you.",viewer:"You can open the documents that owners have shared with you."};
 const $=s=>document.querySelector(s);
 async function api(u,o){const r=await fetch(u,{credentials:"include",headers:{"Content-Type":"application/json"},...o});
 if(r.status===401){location.href="/";throw 0}return r.json()}
