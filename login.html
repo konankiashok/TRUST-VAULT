@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrustVault: Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12263A; --paper:#EEF2F5; --card:#FFFFFF; --line:#CBD5DE;
+  --muted:#51657A; --brand:#0F6B5C; --brand-d:#0A4F44; --err:#B3261E;
+  --owner:#8A5A00; --admin:#1D4E89; --viewer:#47606F;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:"Public Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr)}
+aside{background:var(--ink);color:#E7EEF4;padding:56px 48px;display:flex;flex-direction:column;justify-content:space-between}
+aside h1{font-size:2rem;margin:0 0 12px;letter-spacing:-.01em}
+aside p{margin:0;max-width:34ch;line-height:1.55;color:#B8C7D4}
+.roles{list-style:none;margin:40px 0 0;padding:0;display:grid;gap:14px}
+.roles li{border-left:4px solid var(--c);padding:2px 0 2px 14px}
+.roles b{display:block;font-weight:600}
+.roles span{font-size:.9rem;color:#B8C7D4}
+main{display:flex;align-items:center;justify-content:center;padding:32px}
+.panel{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);margin-bottom:22px}
+.tabs button{background:none;border:0;padding:10px 0 12px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--brand)}
+form{display:grid;gap:14px}
+label{display:grid;gap:6px;font-size:.9rem;font-weight:500}
+input,select{font:inherit;padding:11px 12px;border:1px solid #8FA1B2;border-radius:8px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus,button:focus-visible{outline:3px solid #7FC4B7;outline-offset:1px}
+.pw{position:relative}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--brand);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;padding:6px 8px}
+.link{background:none;border:0;color:var(--brand);font:inherit;font-weight:600;cursor:pointer;padding:0;text-align:left}
+.link:hover{text-decoration:underline}
+.codeinput{font-size:1.6rem;letter-spacing:.5em;text-align:center}
+.primary{background:var(--brand);color:#fff;border:0;border-radius:8px;padding:12px;font:inherit;font-weight:600;cursor:pointer}
+.primary:hover{background:var(--brand-d)}
+.primary:disabled{opacity:.6;cursor:wait}
+.msg{min-height:1.2em;font-size:.88rem;color:var(--err);margin:0}
+.msg.ok{color:var(--brand-d)}
+.hint{font-size:.8rem;color:var(--muted);font-weight:400}
+.demo{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.demo h2{font-size:.95rem;margin:0 0 4px}
+.demo p{margin:0 0 12px;font-size:.85rem;color:var(--muted)}
+.demo .row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.demo button{background:#fff;border:1.5px solid var(--c);color:var(--c);border-radius:8px;padding:10px 4px;font:inherit;font-weight:600;cursor:pointer}
+.demo button:hover{background:var(--c);color:#fff}
+[hidden]{display:none!important}
+@media (max-width:820px){
+  body{grid-template-columns:1fr}
+  aside{padding:28px 24px}
+  .roles{display:none}
+  main{padding:20px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<aside>
+  <div>
+    <h1>TrustVault</h1>
+    <p>Keep your team's sensitive records in one place, with access that matches each person's role.</p>
+    <ul class="roles">
+      <li style="--c:#E0A431"><b>Owner</b><span>Full control, billing, and can remove admins.</span></li>
+      <li style="--c:#6FA3E0"><b>Admin</b><span>Manages members and edits all records.</span></li>
+      <li style="--c:#9FB3C0"><b>Viewer</b><span>Read-only access to shared records.</span></li>
+    </ul>
+  </div>
+</aside>
+
+<main>
+<section class="panel">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-login" aria-selected="true" aria-controls="login-form">Sign in</button>
+    <button role="tab" id="tab-register" aria-selected="false" aria-controls="register-form">Create account</button>
+  </div>
+
+  <form id="login-form" class="f" role="tabpanel" aria-labelledby="tab-login" novalidate>
+    <label>Email or username
+      <input name="identifier" autocomplete="username" required>
+    </label>
+    <label>Password
+      <span class="pw">
+        <input name="password" type="password" autocomplete="current-password" required>
+        <button type="button" data-toggle>Show</button>
+      </span>
+    </label>
+    <p class="msg" role="alert"></p>
+    <button class="primary" type="submit">Sign in</button>
+    <button class="link" type="button" data-show="code-request-form">Email me a login code instead</button>
+  </form>
+
+  <form id="code-request-form" class="f" hidden novalidate>
+    <label>Email
+      <input name="email" type="email" autocomplete="email" required>
+      <span class="hint">We'll email you a 6-digit code. No password needed.</span>
+    </label>
+    <p class="msg" role="alert"></p>
+    <button class="primary" type="submit">Send code</button>
+    <button class="link" type="button" data-show="login-form">Use a password instead</button>
+  </form>
+
+  <form id="code-verify-form" class="f" hidden novalidate>
+    <p class="hint" id="code-sent" style="margin:0"></p>
+    <label>6-digit code
+      <input name="code" class="codeinput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+    </label>
+    <p class="msg" role="alert"></p>
+    <button class="primary" type="submit">Sign in</button>
+    <button class="link" type="button" id="resend">Send a new code</button>
+    <button class="link" type="button" data-show="login-form">Use a password instead</button>
+  </form>
+
+  <form id="register-form" class="f" role="tabpanel" aria-labelledby="tab-register" hidden novalidate>
+    <label>Full name
+      <input name="name" autocomplete="name" required>
+    </label>
+    <label>Email
+      <input name="email" type="email" autocomplete="email" required>
+    </label>
+    <label>Password
+      <span class="pw">
+        <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <button type="button" data-toggle>Show</button>
+      </span>
+      <span class="hint">At least 8 characters.</span>
+    </label>
+    <label>Role
+      <select name="role">
+        <option value="viewer">Viewer: read-only</option>
+        <option value="admin">Admin: manage members and records</option>
+        <option value="owner">Owner: full control</option>
+      </select>
+    </label>
+    <p class="msg" role="alert"></p>
+    <button class="primary" type="submit">Create account</button>
+  </form>
+
+  <div class="demo">
+    <h2>Just looking around?</h2>
+    <p>Try a demo account. No sign-up needed.</p>
+    <div class="row">
+      <button type="button" data-demo="owner" style="--c:var(--owner)">Owner</button>
+      <button type="button" data-demo="admin" style="--c:var(--admin)">Admin</button>
+      <button type="button" data-demo="viewer" style="--c:var(--viewer)">Viewer</button>
+    </div>
+    <p class="msg" id="demo-msg" role="alert" style="margin-top:10px"></p>
+  </div>
+</section>
+</main>
+
+<script>
+// ---- Settings: change these to match your backend ----
+const API = {
+  login: "/api/auth/login",       // POST {identifier, password}
+  register: "/api/auth/register", // POST {name, email, password, role}
+  demo: "/api/auth/demo",         // POST {role}
+  codeRequest: "/api/auth/code/request", // POST {email}
+  codeVerify: "/api/auth/code/verify"    // POST {email, code}
+};
+const AFTER_LOGIN = "/dashboard";
+// ------------------------------------------------------
+
+const $ = (s, r = document) => r.querySelector(s);
+const forms = { login: $("#login-form"), register: $("#register-form") };
+
+function show(id) {
+  document.querySelectorAll("form.f").forEach(f => f.hidden = f.id !== id);
+  const reg = id === "register-form";
+  $("#tab-login").setAttribute("aria-selected", !reg);
+  $("#tab-register").setAttribute("aria-selected", reg);
+  const first = $("#" + id + " input"); if (first) first.focus();
+}
+const showTab = name => show(name === "register" ? "register-form" : "login-form");
+document.querySelectorAll("[data-show]").forEach(b => b.onclick = () => show(b.dataset.show));
+$("#tab-login").onclick = () => showTab("login");
+$("#tab-register").onclick = () => showTab("register");
+
+document.querySelectorAll("[data-toggle]").forEach(b => b.onclick = () => {
+  const input = b.previousElementSibling;
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  b.textContent = show ? "Hide" : "Show";
+});
+
+async function post(url, body) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body)
+  });
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error(data.message || data.error || "Something went wrong. Try again.");
+  return data;
+}
+
+function finish(data) {
+  try { if (data.token) sessionStorage.setItem("tv_token", data.token); } catch (e) {}
+  location.href = AFTER_LOGIN;
+}
+
+async function handle(form, url, build, validate) {
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = $(".msg", form), btn = $(".primary", form);
+    msg.textContent = ""; msg.className = "msg";
+    const v = Object.fromEntries(new FormData(form));
+    const problem = validate(v);
+    if (problem) { msg.textContent = problem; return; }
+    btn.disabled = true;
+    try { finish(await post(url, build(v))); }
+    catch (err) { msg.textContent = err.message; }
+    finally { btn.disabled = false; }
+  });
+}
+
+handle(forms.login, API.login,
+  v => ({ identifier: v.identifier.trim(), password: v.password }),
+  v => (!v.identifier.trim() || !v.password) ? "Enter your email or username and your password." : "");
+
+handle(forms.register, API.register,
+  v => ({ name: v.name.trim(), email: v.email.trim().toLowerCase(), password: v.password, role: v.role }),
+  v => {
+    if (!v.name.trim()) return "Enter your full name.";
+    if (!/^\S+@\S+\.\S+$/.test(v.email)) return "Enter a valid email address.";
+    if (v.password.length < 8) return "Password must be at least 8 characters.";
+    return "";
+  });
+
+// ---- email code login ----
+let codeEmail = "";
+async function sendCode(email, msg) {
+  await post(API.codeRequest, { email });
+  codeEmail = email;
+  $("#code-sent").textContent = "If an account exists for " + email + ", a 6-digit code is on its way. It expires in 10 minutes.";
+  msg.textContent = "";
+}
+$("#code-request-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, msg = $(".msg", f), btn = $(".primary", f);
+  const email = new FormData(f).get("email").trim().toLowerCase();
+  msg.textContent = "";
+  if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = "Enter a valid email address."; return; }
+  btn.disabled = true;
+  try { await sendCode(email, msg); show("code-verify-form"); }
+  catch (err) { msg.textContent = err.message; }
+  finally { btn.disabled = false; }
+});
+$("#code-verify-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, msg = $(".msg", f), btn = $(".primary", f);
+  const code = new FormData(f).get("code").trim();
+  msg.textContent = ""; msg.className = "msg";
+  if (!/^\d{6}$/.test(code)) { msg.textContent = "Enter the 6-digit code from your email."; return; }
+  btn.disabled = true;
+  try { finish(await post(API.codeVerify, { email: codeEmail, code })); }
+  catch (err) { msg.textContent = err.message; }
+  finally { btn.disabled = false; }
+});
+$("#resend").onclick = async () => {
+  const msg = $("#code-verify-form .msg");
+  try { await sendCode(codeEmail, msg); msg.className = "msg ok"; msg.textContent = "New code requested. If you just asked, wait a minute between requests."; }
+  catch (err) { msg.className = "msg"; msg.textContent = err.message; }
+};
+
+document.querySelectorAll("[data-demo]").forEach(b => b.onclick = async () => {
+  const msg = $("#demo-msg"); msg.textContent = "";
+  const role = b.dataset.demo;
+  b.disabled = true;
+  try { finish(await post(API.demo, { role })); }
+  catch (err) { msg.textContent = "Demo isn't available right now. " + err.message; }
+  finally { b.disabled = false; }
+});
+</script>
+</body>
+</html>

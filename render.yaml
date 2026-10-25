@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app --workers 2 --threads 4 --timeout 60
+    startCommand: gunicorn app:app --workers 2 --threads 4 --timeout 60
     envVars:
       - key: TV_ENV
         value: production
